@@ -8,7 +8,6 @@ import datetime
 from typing import TypedDict, List
 
 
-Site_Status = TypedDict('Site_Status', {'url': str, 'status': bool})
 Config_Data = TypedDict('Config_Data', {'email': str, 'urls': List[str]})
 
 
@@ -33,7 +32,7 @@ def is_site_running(site_url: str):
         return False
 
 
-def send_status_email(user_email: str, statuses: Site_Status):
+def send_status_email(user_email: str, failed_check_urls: List[str]):
     """Send an email mentioning status of websites
 
         :arg
@@ -44,8 +43,11 @@ def send_status_email(user_email: str, statuses: Site_Status):
         :returns
             Boolean indicating whether the email was successfully sent.
     """
-    pass
 
+    if not user_email or not failed_check_urls:
+        return False
+
+    return True
 
 def run(config_data: Config_Data):
     """Main function
@@ -60,12 +62,20 @@ def run(config_data: Config_Data):
     next_check_interval = datetime.datetime.now()
 
     while True:
+        failed_urls = []
         if datetime.datetime.now() >= next_check_interval:
             for url in urls:
-                print(f"Is {url} running?: {is_site_running(url)}")
-            # Immediate return for testing
+                if not is_site_running(url):
+                    failed_urls.append(url)
+
+            # Send email regarding failed checks if email is provided
+            send_status_email(user_email, failed_urls)
+
+            # TODO: Allow for configuring interval betwene checks
             next_check_interval += datetime.timedelta(minutes=30)
+            # Immediate return for testing
             return "Done"
+
 
 def parseConfigData(filepath: str):
     with open(filepath) as f:
