@@ -17,7 +17,8 @@ app_password = os.getenv('APP_PASSWORD')
 
 # Type annotations
 Status_Data = List[TypedDict('Status_Data', {'url': str, 'status': str})]
-Config_Data = TypedDict('Config_Data', {'recipients': List[str], 'urls': List[str]})
+Config_Data = TypedDict('Config_Data', {'recipients': List[str], 'urls': List[str],
+                                        'check_interval_secs': int})
 
 
 def is_site_running(site_url: str):
@@ -85,6 +86,7 @@ def run(config_data: Config_Data):
     """
     recipients = config_data.get('recipients')
     urls = config_data.get('urls')
+    downtime = config_data.get('check_interval_secs')
 
     while True:
         url_statuses = []
@@ -97,7 +99,7 @@ def run(config_data: Config_Data):
         send_status_email(recipients, url_statuses)
 
         # TODO: Allow for configuring interval between checks
-        time.sleep(300)
+        time.sleep(downtime)
 
 
 def parseConfigData(filepath: str):
