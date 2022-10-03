@@ -1,0 +1,11 @@
+{
+  "recipients": [
+    "tester@gmail.com",
+    "tester2@gmail.com"
+  ],
+  "urls": [
+    "https://sitetocheck.com",
+    "https://anothersitetocheck.com"
+  ],
+  "check_interval_secs": 3600
+}

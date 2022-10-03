@@ -11,10 +11,6 @@ from email.message import EmailMessage
 
 load_dotenv()
 
-user_email = os.getenv('USER_EMAIL')
-# Most likely necessary if using gmail or any other secure mailing client
-app_password = os.getenv('APP_PASSWORD')
-
 # Type annotations
 Status_Data = List[TypedDict('Status_Data', {'url': str, 'status': str})]
 Config_Data = TypedDict('Config_Data', {'recipients': List[str], 'urls': List[str],
@@ -66,7 +62,7 @@ def send_status_email(recipients: List[str], urls: Status_Data):
     msg['From'] = user_email
     msg['To'] = recipients
 
-    print(msg)
+    # print(msg)
     # Send the message throught SMTP server on localhost
     with smtplib.SMTP('smtp.gmail.com', 587) as server:
         server.starttls()
@@ -82,7 +78,7 @@ def run(config_data: Config_Data):
 
         :arg
             config_file_path: A string representing the path to your JSON configuration file \
-            where the list of websites to check and an (optional) email are stored.
+            where the list of websites to check, an email, and a time interval (in secs) are stored.
     """
     recipients = config_data.get('recipients')
     urls = config_data.get('urls')
@@ -95,10 +91,9 @@ def run(config_data: Config_Data):
                         'status': 'Online' if is_site_running(url) else 'Offline'}
             url_statuses.append(url_data)
 
-        # Send email regarding failed checks if email is provided
+        # Send email regarding status checks
         send_status_email(recipients, url_statuses)
 
-        # TODO: Allow for configuring interval between checks
         time.sleep(downtime)
 
 
@@ -110,6 +105,10 @@ def parseConfigData(filepath: str):
 
 
 if __name__ == "__main__":
+    user_email = os.getenv('USER_EMAIL')
+    # Most likely necessary if using gmail or any other highly secure mailing client
+    app_password = os.getenv('APP_PASSWORD')
+
     # Read in command line argument for config file path
     try:
         config_path = sys.argv[1]
