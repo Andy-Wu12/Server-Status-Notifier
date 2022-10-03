@@ -2,11 +2,14 @@ import requests
 import smtplib
 import email
 import sys
+import json
+import datetime
 
-from typing import TypedDict
+from typing import TypedDict, List
 
 
 Site_Status = TypedDict('Site_Status', {'url': str, 'status': bool})
+Config_Data = TypedDict('Config_Data', {'email': str, 'urls': List[str]})
 
 
 def is_site_running(site_url: str):
@@ -21,7 +24,7 @@ def is_site_running(site_url: str):
         In the case that the url is invalid or an exception is raised,
         the function returns False.
     """
-    pass
+    return False
 
 
 def send_status_email(user_email: str, statuses: Site_Status):
@@ -38,14 +41,30 @@ def send_status_email(user_email: str, statuses: Site_Status):
     pass
 
 
-def run(config_file_path: str):
+def run(config_data: Config_Data):
     """Main function
 
         :arg
             config_file_path: A string representing the path to your JSON configuration file \
-            where the list of websites to check and your (optional) email are stored.
+            where the list of websites to check and an (optional) email are stored.
     """
-    pass
+    user_email = config_data.get('email')
+    urls = config_data.get('urls')
+
+    next_check_interval = datetime.datetime.now()
+
+    while True:
+        if datetime.datetime.now() >= next_check_interval:
+            for url in urls:
+                print(f"Is {url} running?: {is_site_running(url)}")
+            # Immediate return for testing
+            return "Done"
+
+def parseConfigData(filepath: str):
+    with open(filepath) as f:
+        data = json.load(f)
+
+    return data
 
 
 if __name__ == "__main__":
@@ -55,4 +74,5 @@ if __name__ == "__main__":
     except IndexError:
         sys.exit("A filepath must be provided for the location of your configuration file!")
 
-    run(config_path)
+    config_json = parseConfigData(config_path)
+    run(config_json)
