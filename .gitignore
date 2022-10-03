@@ -4,4 +4,6 @@
 # PyCharm
 *.idea/
 
+# Necessary files
 config.json
+.env

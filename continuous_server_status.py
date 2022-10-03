@@ -1,14 +1,23 @@
 import requests
 import smtplib
-import email
 import sys
 import json
-import datetime
+import os
+import time
 
+from dotenv import load_dotenv
 from typing import TypedDict, List
+from email.message import EmailMessage
 
+load_dotenv()
 
-Config_Data = TypedDict('Config_Data', {'email': str, 'urls': List[str]})
+user_email = os.getenv('USER_EMAIL')
+# Most likely necessary if using gmail or any other secure mailing client
+app_password = os.getenv('APP_PASSWORD')
+
+# Type annotations
+Status_Data = List[TypedDict('Status_Data', {'url': str, 'status': str})]
+Config_Data = TypedDict('Config_Data', {'recipients': List[str], 'urls': List[str]})
 
 
 def is_site_running(site_url: str):
@@ -32,7 +41,7 @@ def is_site_running(site_url: str):
         return False
 
 
-def send_status_email(user_email: str, failed_check_urls: List[str]):
+def send_status_email(recipients: List[str], urls: Status_Data):
     """Send an email mentioning status of websites
 
         :arg
@@ -44,10 +53,28 @@ def send_status_email(user_email: str, failed_check_urls: List[str]):
             Boolean indicating whether the email was successfully sent.
     """
 
-    if not user_email or not failed_check_urls:
+    if not recipients or not urls:
         return False
 
+    msg_body = ''.join([f'{url_data["url"]} status: {url_data["status"]}\n' for url_data in urls])
+
+    msg = EmailMessage()
+    msg.set_content(msg_body)
+
+    msg['Subject'] = 'Your website status update'
+    msg['From'] = user_email
+    msg['To'] = recipients
+
+    print(msg)
+    # Send the message throught SMTP server on localhost
+    with smtplib.SMTP('smtp.gmail.com', 587) as server:
+        server.starttls()
+        server.login(user_email, app_password)
+        server.sendmail(user_email, [user_email], msg.as_string())
+        server.quit()
+        print('email success!')
     return True
+
 
 def run(config_data: Config_Data):
     """Main function
@@ -56,25 +83,21 @@ def run(config_data: Config_Data):
             config_file_path: A string representing the path to your JSON configuration file \
             where the list of websites to check and an (optional) email are stored.
     """
-    user_email = config_data.get('email')
+    recipients = config_data.get('recipients')
     urls = config_data.get('urls')
 
-    next_check_interval = datetime.datetime.now()
-
     while True:
-        failed_urls = []
-        if datetime.datetime.now() >= next_check_interval:
-            for url in urls:
-                if not is_site_running(url):
-                    failed_urls.append(url)
+        url_statuses = []
+        for url in urls:
+            url_data = {'url': url,
+                        'status': 'Online' if is_site_running(url) else 'Offline'}
+            url_statuses.append(url_data)
 
-            # Send email regarding failed checks if email is provided
-            send_status_email(user_email, failed_urls)
+        # Send email regarding failed checks if email is provided
+        send_status_email(recipients, url_statuses)
 
-            # TODO: Allow for configuring interval betwene checks
-            next_check_interval += datetime.timedelta(minutes=30)
-            # Immediate return for testing
-            return "Done"
+        # TODO: Allow for configuring interval between checks
+        time.sleep(300)
 
 
 def parseConfigData(filepath: str):
