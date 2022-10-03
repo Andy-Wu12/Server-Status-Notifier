@@ -24,7 +24,13 @@ def is_site_running(site_url: str):
         In the case that the url is invalid or an exception is raised,
         the function returns False.
     """
-    return False
+
+    try:
+        response = requests.get(site_url)
+        return response.ok
+    except Exception as e:
+        print(f"ERROR occurred: {e}")
+        return False
 
 
 def send_status_email(user_email: str, statuses: Site_Status):
@@ -58,6 +64,7 @@ def run(config_data: Config_Data):
             for url in urls:
                 print(f"Is {url} running?: {is_site_running(url)}")
             # Immediate return for testing
+            next_check_interval += datetime.timedelta(minutes=30)
             return "Done"
 
 def parseConfigData(filepath: str):
