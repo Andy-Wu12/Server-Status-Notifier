@@ -16,6 +16,16 @@ Status_Data = List[TypedDict('Status_Data', {'url': str, 'status': str})]
 Config_Data = TypedDict('Config_Data', {'recipients': List[str], 'urls': List[str],
                                         'emails_fail_only': bool, 'check_interval_secs': int})
 
+ENV_EMAIL = 'USER_EMAIL'
+ENV_PASS = 'APP_PASSWORD'
+user_email = os.getenv(ENV_EMAIL)
+# Most likely necessary if using gmail or any other highly secure mailing client
+app_password = os.getenv(ENV_PASS)
+
+if not user_email or not app_password:
+    print(f'Set up your .env file with an email and password set to {ENV_EMAIL} and {ENV_PASS}, respectively')
+    sys.exit()
+
 
 def is_site_running(site_url: str):
     """Ping desired site
@@ -85,6 +95,11 @@ def run(config_data: Config_Data):
     downtime = config_data.get('check_interval_secs')
     emails_on_fail_only = config_data.get('emails_fail_only')
 
+    if None in [recipients, urls, downtime, emails_on_fail_only]:
+        print('A key is missing from your configuration!')
+        print('Please make sure you have all keys as shown in the configuration template.')
+        return None
+
     while True:
         url_statuses = []
         for url in urls:
@@ -101,22 +116,26 @@ def run(config_data: Config_Data):
 
 
 def parseConfigData(filepath: str):
-    with open(filepath) as f:
-        data = json.load(f)
+    try:
+        with open(filepath) as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        raise e
 
     return data
 
 
 if __name__ == "__main__":
-    user_email = os.getenv('USER_EMAIL')
-    # Most likely necessary if using gmail or any other highly secure mailing client
-    app_password = os.getenv('APP_PASSWORD')
-
     # Read in command line argument for config file path
     try:
         config_path = sys.argv[1]
     except IndexError:
         sys.exit("A filepath must be provided for the location of your configuration file!")
 
-    config_json = parseConfigData(config_path)
-    run(config_json)
+    try:
+        config_json = parseConfigData(config_path)
+        run(config_json)
+    except json.JSONDecodeError:
+        print("Error in parsing JSON. Please check your file for syntax errors!")
+    except FileNotFoundError:
+        print("The filename you entered does not exist!")
