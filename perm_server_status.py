@@ -67,7 +67,7 @@ def send_status_email(recipients: List[str], urls: Status_Data):
     with smtplib.SMTP('smtp.gmail.com', 587) as server:
         server.starttls()
         server.login(user_email, app_password)
-        server.sendmail(user_email, [user_email], msg.as_string())
+        server.sendmail(user_email, recipients, msg.as_string())
         server.quit()
         print('email success!')
     return True
