@@ -85,6 +85,11 @@ def run(config_data: Config_Data):
     downtime = config_data.get('check_interval_secs')
     emails_on_fail_only = config_data.get('emails_fail_only')
 
+    if None in [recipients, urls, downtime, emails_on_fail_only]:
+        print('A key is missing from your configuration!')
+        print('Please make sure you have all keys as shown in the configuration template.')
+        return None
+
     while True:
         url_statuses = []
         for url in urls:
@@ -101,8 +106,11 @@ def run(config_data: Config_Data):
 
 
 def parseConfigData(filepath: str):
-    with open(filepath) as f:
-        data = json.load(f)
+    try:
+        with open(filepath) as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        raise e
 
     return data
 
@@ -118,5 +126,10 @@ if __name__ == "__main__":
     except IndexError:
         sys.exit("A filepath must be provided for the location of your configuration file!")
 
-    config_json = parseConfigData(config_path)
-    run(config_json)
+    try:
+        config_json = parseConfigData(config_path)
+        run(config_json)
+    except json.JSONDecodeError:
+        print("Error in parsing JSON. Please check your file for syntax errors!")
+    except FileNotFoundError:
+        print("The filename you entered does not exist!")
