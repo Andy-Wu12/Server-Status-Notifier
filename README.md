@@ -21,7 +21,14 @@ A Python script that helps check the online status of a list of user-provided we
 ## 2. Permanently
 1. Additionally install the dotenv module with `pip install python-dotenv`
 2. Modify the `config_template.json` file replacing the provided placeholders with your own data in the same format.
-   1. You can rename the file as you wish, just make sure to pass the correct name when calling the script.
+   1. The necessary configuration variables are:
+      1. "recipients": List of strings representing email addresses to send status updates to
+      2. "urls": List of strings representing website urls following same format as mentioned above
+      3. "emails_fail_only": Boolean representing whether to send emails only if a status check fails.
+         1. true indicates that you want the server to send an email when at least one status check fails.
+         2. This can be used with a lower "check_interval_secs" to prevent a flood of emails while also having the status check run constantly.
+      4. "check_interval_secs": Integer representing the number of seconds to delay another round of status checks.
+   2. You can rename the file as you wish, just make sure to pass the correct name when calling the script.
 3. Create a .env file with your gmail address and [APP PASSWORD](https://support.google.com/accounts/answer/185833?hl=en)
    1. If you want to use a different mailing client, you will have to modify `perm_server_status` with the 
    client's required configuration.
