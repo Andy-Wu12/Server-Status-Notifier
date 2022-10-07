@@ -16,6 +16,16 @@ Status_Data = List[TypedDict('Status_Data', {'url': str, 'status': str})]
 Config_Data = TypedDict('Config_Data', {'recipients': List[str], 'urls': List[str],
                                         'emails_fail_only': bool, 'check_interval_secs': int})
 
+ENV_EMAIL = 'USER_EMAIL'
+ENV_PASS = 'APP_PASSWORD'
+user_email = os.getenv(ENV_EMAIL)
+# Most likely necessary if using gmail or any other highly secure mailing client
+app_password = os.getenv(ENV_PASS)
+
+if not user_email or not app_password:
+    print(f'Set up your .env file with an email and password set to {ENV_EMAIL} and {ENV_PASS}, respectively')
+    sys.exit()
+
 
 def is_site_running(site_url: str):
     """Ping desired site
@@ -116,10 +126,6 @@ def parseConfigData(filepath: str):
 
 
 if __name__ == "__main__":
-    user_email = os.getenv('USER_EMAIL')
-    # Most likely necessary if using gmail or any other highly secure mailing client
-    app_password = os.getenv('APP_PASSWORD')
-
     # Read in command line argument for config file path
     try:
         config_path = sys.argv[1]
