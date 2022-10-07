@@ -14,7 +14,7 @@ load_dotenv()
 # Type annotations
 Status_Data = List[TypedDict('Status_Data', {'url': str, 'status': str})]
 Config_Data = TypedDict('Config_Data', {'recipients': List[str], 'urls': List[str],
-                                        'check_interval_secs': int})
+                                        'emails_fail_only': bool, 'check_interval_secs': int})
 
 
 def is_site_running(site_url: str):
@@ -62,7 +62,7 @@ def send_status_email(recipients: List[str], urls: Status_Data):
     msg['From'] = user_email
     msg['To'] = recipients
 
-    # print(msg)
+    print(msg)
     # Send the message throught SMTP server on localhost
     with smtplib.SMTP('smtp.gmail.com', 587) as server:
         server.starttls()
@@ -83,13 +83,16 @@ def run(config_data: Config_Data):
     recipients = config_data.get('recipients')
     urls = config_data.get('urls')
     downtime = config_data.get('check_interval_secs')
+    emails_on_fail_only = config_data.get('emails_fail_only')
 
     while True:
         url_statuses = []
         for url in urls:
+            running = is_site_running(url)
             url_data = {'url': url,
-                        'status': 'Online' if is_site_running(url) else 'Offline'}
-            url_statuses.append(url_data)
+                        'status': 'Online' if running else 'Offline'}
+            if (emails_on_fail_only and not running) or not emails_on_fail_only:
+                url_statuses.append(url_data)
 
         # Send email regarding status checks
         send_status_email(recipients, url_statuses)

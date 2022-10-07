@@ -7,5 +7,6 @@
     "https://sitetocheck.com",
     "https://anothersitetocheck.com"
   ],
+  "emails_fail_only": false,
   "check_interval_secs": 3600
 }
